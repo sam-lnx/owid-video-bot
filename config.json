@@ -1,0 +1,17 @@
+{
+  "life_expectancy": {
+    "title": "Life Expectancy",
+    "y_label": "Years",
+    "zoom_max": 100
+  },
+  "co2_per_capita": {
+    "title": "CO₂ Emissions per Capita",
+    "y_label": "Tonnes",
+    "zoom_max": 30
+  },
+  "gdp_per_capita": {
+    "title": "GDP per Capita",
+    "y_label": "US Dollars",
+    "zoom_max": 60000
+  }
+}
