@@ -31,8 +31,22 @@ zoom_max = cfg.get("zoom_max", None)
 
 # Fetch data
 df = fetch_owid_data(metric=metric, country=country)
+
+if df.empty or df[metric].isnull().all():
+    print(f"❌ No valid data found for metric '{metric}' and country '{country}'. Exiting.")
+    exit(1)
+
 x_vals = pd.to_datetime(df['date']).dt.year.to_numpy()
 y_vals = df[metric].to_numpy()
+
+# Remove invalid values
+good_mask = (~np.isnan(x_vals)) & (~np.isnan(y_vals))
+x_vals = x_vals[good_mask]
+y_vals = y_vals[good_mask]
+
+if len(x_vals) < 2:
+    print("❌ Not enough data points after filtering. Exiting.")
+    exit(1)
 
 # Interpolation
 t = np.linspace(0, 1, 24 * 20)
@@ -76,7 +90,10 @@ year_box = ax.text(
 def update(frame):
     current_x = x_dense[frame]
     current_y = y_dense[frame]
-    ax.set_ylim(0, max(current_y + 1, zoom_max or max(y_vals)))
+    ylim_top = max(current_y + 1, zoom_max or max(y_vals))
+    if np.isnan(current_y) or np.isinf(current_y):
+        return []
+    ax.set_ylim(0, ylim_top)
     line.set_data(x_dense[:frame], y_dense[:frame])
     if frame % 10 == 0:
         dot = Circle((current_x, current_y), 0.15, color='#FF5722', alpha=0.8)
@@ -95,6 +112,10 @@ plt.close(fig)
 # Add music
 bgm_dir = "assets/bgm"
 bgm_files = [f for f in os.listdir(bgm_dir) if f.endswith(".mp3")]
+if not bgm_files:
+    print("❌ No MP3 files found in assets/bgm. Skipping audio merge.")
+    exit(0)
+
 bgm_path = os.path.join(bgm_dir, random.choice(bgm_files))
 audio_faded = "output/faded_audio.mp3"
 
